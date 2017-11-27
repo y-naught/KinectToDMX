@@ -19,7 +19,7 @@ int leftCrop = 0;
 int rightCrop = 512;
 int preCenX = 0;
 int preCenY = 0;
-float smFactor = 0.1;
+float smFactor = 0.03;
 int distX = 50;
 int distY = 70;
 float avgD = 0;
@@ -52,7 +52,7 @@ void draw(){
   PImage visual = createImage(kinect2.depthWidth, kinect2.depthHeight, RGB);
   data = kinect2.getRawDepth();
   visual.loadPixels();
-  
+  int count = 0;
   for(int x = 0; x < kinect2.depthWidth; x++){
    for(int y = 0; y < kinect2.depthHeight; y++){
      int value = data[x + y * kinect2.depthWidth];
@@ -60,6 +60,7 @@ void draw(){
        visual.pixels[x + y * kinect2.depthWidth] = color(255, 0, 0);
        avgD += value;
        tfArray[x + y * kinect2.depthWidth] = true;
+       count++;
      }else{
        tfArray[x + y * kinect2.depthWidth] = false; 
      }
@@ -75,6 +76,7 @@ void draw(){
    }
   }
   
+  
   int sum = 1;
   int centerX = 0;
   int centerY = 0;
@@ -88,14 +90,13 @@ void draw(){
      }
    }
   }
-  
+  if(sum > 150){
   centerX = centerX / sum;
   centerY = centerY / sum;
   preCenX += (centerX - preCenX) * smFactor;
   preCenY += (centerY - preCenY) * smFactor;
   avgD = avgD / sum;
-  
-  
+  }
   
   for( int x = 0; x < kinect2.depthWidth; x++){
    for(int y = 0; y < kinect2.depthHeight; y++){
