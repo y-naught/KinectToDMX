@@ -17,12 +17,13 @@ int topCrop = 0;
 int bottomCrop = 424;
 int leftCrop = 0;
 int rightCrop = 512;
-int preCenX = 0;
-int preCenY = 0;
+int preCenX = 250;
+int preCenY = 250;
 float smFactor = 0.03;
 int distX = 50;
 int distY = 70;
-float avgD = 0;
+float avgD = 2400;
+float lastD = 2400;
 
 Boolean imgToggle = false;
 Boolean operationToggle = false;
@@ -90,12 +91,14 @@ void draw(){
      }
    }
   }
-  if(sum > 150){
+  if(count > 150){
   centerX = centerX / sum;
   centerY = centerY / sum;
   preCenX += (centerX - preCenX) * smFactor;
   preCenY += (centerY - preCenY) * smFactor;
   avgD = avgD / sum;
+  }else{
+    avgD = lastD;
   }
   
   for( int x = 0; x < kinect2.depthWidth; x++){
