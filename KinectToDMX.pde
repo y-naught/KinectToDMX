@@ -98,7 +98,7 @@ void draw(){
      }
    }
   }
-  if(sum > 10000){
+  if(sum > 1000){
   centerX = centerX / sum;
   centerY = centerY / sum;
   preCenX += (centerX - preCenX) * smFactor;
@@ -177,11 +177,11 @@ void draw(){
   ellipse(prevXmin, prevYmin, 30, 30);
   ellipse(prevXmax, prevYmax, 30, 30);
   ellipse(preCenX, preCenY, 35, 150);
-  int temp;
+  float temp;
   if(personSwitch){
    temp = 1;
   }else{
-   temp = 0; 
+   temp = 0;
   }
   client.write(preCenX + "," + preCenY + "," + avgD + "," + prevXmin + "," + prevYmin + "," + prevXmax + "," + prevYmax + "," + temp);
 }
