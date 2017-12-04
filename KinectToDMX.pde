@@ -19,14 +19,20 @@ int leftCrop = 0;
 int rightCrop = 512;
 int preCenX = 250;
 int preCenY = 250;
-float smFactor = 0.03;
+float smFactor = 0.08;
 int distX = 50;
 int distY = 70;
 float avgD = 2400;
 float lastD = 2400;
 
+float prevXmax = width;
+float prevYmax = height;
+float prevXmin = 0;
+float prevYmin = 0;
+
 Boolean imgToggle = false;
 Boolean operationToggle = false;
+boolean personSwitch = false;
 
 //to store the values for the crop and thresholds
 PrintWriter output;
@@ -54,6 +60,7 @@ void draw(){
   data = kinect2.getRawDepth();
   visual.loadPixels();
   int count = 0;
+  
   for(int x = 0; x < kinect2.depthWidth; x++){
    for(int y = 0; y < kinect2.depthHeight; y++){
      int value = data[x + y * kinect2.depthWidth];
@@ -91,27 +98,29 @@ void draw(){
      }
    }
   }
-  if(count > 150){
+  if(sum > 10000){
   centerX = centerX / sum;
   centerY = centerY / sum;
   preCenX += (centerX - preCenX) * smFactor;
   preCenY += (centerY - preCenY) * smFactor;
   avgD = avgD / sum;
+  personSwitch = true;
   }else{
+    personSwitch = false;
     avgD = lastD;
   }
   
   for( int x = 0; x < kinect2.depthWidth; x++){
    for(int y = 0; y < kinect2.depthHeight; y++){
      int edgeCount = 0;
-     if(x > 2 && x < kinect2.depthWidth - 2 && y > 2 && y < kinect2.depthHeight - 2){
-    for(int i = -2; i <=2; i++){
-     for(int j = -2; j <= 2; j++){
+     if(x > 3 && x < kinect2.depthWidth - 3 && y > 3 && y < kinect2.depthHeight - 3){
+    for(int i = -3; i <=3; i++){
+     for(int j = -3; j <= 3; j++){
        if(tfArray[(x + i) + (y + j) * kinect2.depthWidth]){
          edgeCount++;
        }
      }
-     if(edgeCount > 9 && edgeCount < 20){
+     if(edgeCount > 20 && edgeCount < 35){
       edgeArray[x + y * kinect2.depthWidth] = true; 
      }else{
       edgeArray[x + y * kinect2.depthWidth] = false; 
@@ -120,17 +129,41 @@ void draw(){
     }
    }
   }
+  
+  float xmin = width + 1;
+  float xmax = -1;
+  float ymin = height + 1;
+  float ymax = -1;
   PImage edgeImg = createImage(kinect2.depthWidth, kinect2.depthHeight, RGB);
   edgeImg.loadPixels();
   for(int x = 0; x < kinect2.depthWidth; x++){
    for(int y = 0; y < kinect2.depthHeight; y++){
      if(edgeArray[x + y * kinect2.depthWidth]){
+       if(x < xmin){
+        xmin = x; 
+        ymin = y; 
+       }
+       if(x > xmax){
+        xmax = x;
+        ymax = y;
+       }
        edgeImg.pixels[x + y * kinect2.depthWidth] = color(255);
      }
    }
   }
   edgeImg.updatePixels();
-  
+  if(xmin > preCenX - 150){
+    prevXmin += (xmin - prevXmin) * smFactor * 2;
+    prevYmin += (ymin - prevYmin) * smFactor * 2;
+  }if(personSwitch == false){
+    prevYmin += (height/2 - prevYmin) * smFactor * 2;
+  }
+  if(xmax < preCenX + 150){
+   prevXmax += (xmax - prevXmax) * smFactor * 2;
+   prevYmax += (ymax - prevYmax) * smFactor * 2;
+  }if(personSwitch == false){
+   prevYmax += (height/2 - prevYmax) * smFactor * 2; 
+  }
   
   visual.updatePixels();
   if(imgToggle){
@@ -141,8 +174,16 @@ void draw(){
   ellipseMode(CENTER);
   stroke(255);
   noFill();
+  ellipse(prevXmin, prevYmin, 30, 30);
+  ellipse(prevXmax, prevYmax, 30, 30);
   ellipse(preCenX, preCenY, 35, 150);
-  client.write(preCenX + "," + preCenY + "," + avgD);
+  int temp;
+  if(personSwitch){
+   temp = 1;
+  }else{
+   temp = 0; 
+  }
+  client.write(preCenX + "," + preCenY + "," + avgD + "," + prevXmin + "," + prevYmin + "," + prevXmax + "," + prevYmax + "," + temp);
 }
 
 void readSettings(){
